@@ -10,13 +10,12 @@ debug?.destroy();
 import Stats from 'stats.js';
 import GUI from 'lil-gui';
 import * as pixiUtils from './pixiUtils';
-import { clock } from './clock'
 
 // import { shared as game } from '@/game/game'
 
 const ACTIVATION_HASH = '#dev';
 
-const SHOW_GUI_BY_DEFAULT =  import.meta.env.DEV ? true : false;
+const SHOW_GUI_BY_DEFAULT =  import.meta.env.DEV ? false : false;
 const SHOW_GUI_IF_HASH_PRESENT = import.meta.env.DEV ? true : true;
 
 const MONITOR_FPS_BY_DEFAULT =  import.meta.env.DEV ? false : false;
@@ -54,6 +53,10 @@ export function log(idPrefix, title, val){
 
   if (arguments.length === 2){
     title = null;
+  }
+
+  if (idPrefix === 'phase_neutral'){
+   // debugger
   }
 
   idPrefix = idPrefix ? `[${idPrefix}] ` : '';
@@ -139,10 +142,6 @@ export function createDebug(){
   function monitorFPS(enable){
 
     if (stats){
-
-      clock.off('tick.pre', onTickPre)
-      clock.off('tick.post', onTickPost)
-
       stats.dom.parentNode.removeChild(stats.dom)
       stats = null;
     }
@@ -151,10 +150,6 @@ export function createDebug(){
       stats = new Stats();
       stats.showPanel(0);
       document.body.appendChild(stats.dom);
-
-      clock.on('tick.pre', onTickPre)
-      clock.on('tick.post', onTickPost)
-      
     }
 
   }
