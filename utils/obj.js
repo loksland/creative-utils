@@ -1,4 +1,5 @@
 
+// Simple hash: Not for secure purposes
 export function toPrettyPrint(obj) {
   return JSON.stringify(obj, 0, 2);
 }
@@ -10,3 +11,4 @@ export function deepClone(obj){
 export function keyCount(obj){
   return Object.keys(obj).length;
 }
+
