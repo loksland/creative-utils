@@ -15,10 +15,10 @@ import * as pixiUtils from './pixiUtils';
 
 const ACTIVATION_HASH = '#dev';
 
-const SHOW_GUI_BY_DEFAULT =  import.meta.env.DEV ? false : false;
+const SHOW_GUI_BY_DEFAULT = import.meta.env.DEV ? false : false;
 const SHOW_GUI_IF_HASH_PRESENT = import.meta.env.DEV ? true : true;
 
-const MONITOR_FPS_BY_DEFAULT =  import.meta.env.DEV ? false : false;
+const MONITOR_FPS_BY_DEFAULT = import.meta.env.DEV ? false : false;
 const MONITOR_FPS_IF_HASH_PRESENT = import.meta.env.DEV ? false : false;
 
 const LOGGING_ENABLED_BY_DEFAULT = import.meta.env.DEV ? true : false;
@@ -34,150 +34,157 @@ export let stats;
 export let shared;
 
 let logState = {
-  enabled: LOGGING_ENABLED_BY_DEFAULT
-}
+  enabled: LOGGING_ENABLED_BY_DEFAULT,
+};
 
 // Title is only used if all 3 arguments are present.
-export function log(idPrefix, title, val){
-
-  if (!logState.enabled){
+export function log(idPrefix, title, val) {
+  if (!logState.enabled) {
     return;
   }
 
   val = arguments[arguments.length - 1];
 
-  if (arguments.length === 1){
+  if (arguments.length === 1) {
     idPrefix = null;
     title = null;
   }
 
-  if (arguments.length === 2){
+  if (arguments.length === 2) {
     title = null;
   }
 
-  if (idPrefix === 'phase_neutral'){
-   // debugger
+  if (idPrefix === 'phase_neutral') {
+    // debugger
   }
 
   idPrefix = idPrefix ? `[${idPrefix}] ` : '';
 
-  if (typeof val === 'function'){
+  if (typeof val === 'function') {
     val = val();
   }
 
-  if (typeof val !== 'string'){
-  
-    val = JSON.stringify(val,  function(key, val) {
-      if (pixiUtils.isDisplayObject(val)){
-        return pixiUtils.getLogSummary(val);
-      }
-      return val;
-    }, 2);
+  if (typeof val !== 'string') {
+    val = JSON.stringify(
+      val,
+      function (key, val) {
+        if (pixiUtils.isDisplayObject(val)) {
+          return pixiUtils.getLogSummary(val);
+        }
+        return val;
+      },
+      2,
+    );
   }
 
-  if ((title || idPrefix) && val?.includes('\n')){
+  if ((title || idPrefix) && val?.includes('\n')) {
     val = '\n' + val;
   }
 
-  if (title){
-    title = `${title}: `
+  if (title) {
+    title = `${title}: `;
   } else {
     title = '';
   }
 
-  if (window){
-    window['con'+'sole'].log(`${idPrefix}${title}${val}`);
+  if (window) {
+    window['con' + 'sole'].log(`${idPrefix}${title}${val}`);
   }
 }
 
-export function createDebug(){
-
-  if (shared){
-    throw Error('[debug] Only 1 instance of debug can exist at a time')
+export function createDebug() {
+  if (shared) {
+    throw Error('[debug] Only 1 instance of debug can exist at a time');
   }
 
   const activationHashIsPresent = window.location.hash === ACTIVATION_HASH;
 
-  if (activationHashIsPresent && LOGGING_ENABLED_IF_HASH_PRESENT){
+  if (activationHashIsPresent && LOGGING_ENABLED_IF_HASH_PRESENT) {
     logState.enabled = true;
   }
 
-  if (SHOW_GUI_BY_DEFAULT || (activationHashIsPresent && SHOW_GUI_IF_HASH_PRESENT)){
-
-    gui = new GUI({width: 320});
+  if (
+    SHOW_GUI_BY_DEFAULT ||
+    (activationHashIsPresent && SHOW_GUI_IF_HASH_PRESENT)
+  ) {
+    gui = new GUI({ width: 320 });
 
     //const guiFolder = gui.addFolder(`debug`);
-    gui.add({
-      'monitorFPS': MONITOR_FPS_BY_DEFAULT
-    }, 
-    'monitorFPS'
-    ).name( 'monitor FPS').onChange( enabled => {
-      monitorFPS(enabled)
-    });
+    gui
+      .add(
+        {
+          monitorFPS: MONITOR_FPS_BY_DEFAULT,
+        },
+        'monitorFPS',
+      )
+      .name('monitor FPS')
+      .onChange((enabled) => {
+        monitorFPS(enabled);
+      });
 
-    gui.add(logState, 
-    'enabled'
-    ).name( 'logging').onChange( enabled => {
+    gui
+      .add(logState, 'enabled')
+      .name('logging')
+      .onChange((enabled) => {
+        const enabledOG = enabled;
+        if (!enabled) {
+          logState.enabled = true;
+        }
+        log('debug', enabled ? 'Logging enabled' : 'Logging disabled');
+        logState.enabled = enabledOG;
+      });
 
-      const enabledOG = enabled;
-      if (!enabled){
-        logState.enabled = true;
-      }
-      log('debug', enabled ? 'Logging enabled' : 'Logging disabled')
-      logState.enabled = enabledOG;
-    });
-
-    gui.add({
-      'destroy': destroy
-    },
-    'destroy'
-    ).name( 'remove this panel'); 
-    
+    gui
+      .add(
+        {
+          destroy: destroy,
+        },
+        'destroy',
+      )
+      .name('remove this panel');
   }
 
-  if (MONITOR_FPS_BY_DEFAULT || (activationHashIsPresent && MONITOR_FPS_IF_HASH_PRESENT)){ // Otherwise will wait for FPS monitoring to be enabled via the GUI
+  if (
+    MONITOR_FPS_BY_DEFAULT ||
+    (activationHashIsPresent && MONITOR_FPS_IF_HASH_PRESENT)
+  ) {
+    // Otherwise will wait for FPS monitoring to be enabled via the GUI
     monitorFPS(true);
   }
 
-  function monitorFPS(enable){
-
-    if (stats){
-      stats.dom.parentNode.removeChild(stats.dom)
+  function monitorFPS(enable) {
+    if (stats) {
+      stats.dom.parentNode.removeChild(stats.dom);
       stats = null;
     }
 
-    if (enable){
+    if (enable) {
       stats = new Stats();
       stats.showPanel(0);
       document.body.appendChild(stats.dom);
     }
-
   }
 
-  function onTickPre(){
-    stats?.begin();
-  }
+  // function onTickPre() {
+  //   stats?.begin();
+  // }
 
-  function onTickPost(){
-    stats?.end();
-  }
+  // function onTickPost() {
+  //   stats?.end();
+  // }
 
-  function destroy(){
-    
-    shared = null; 
+  function destroy() {
+    shared = null;
 
-    if (gui){
+    if (gui) {
       gui.destroy();
       gui = null;
     }
-  
+
     monitorFPS(false);
-  
   }
 
   shared = {
-    destroy
-  }
-
+    destroy,
+  };
 }
-

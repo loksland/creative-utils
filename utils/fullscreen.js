@@ -18,68 +18,72 @@ export let shared;
 
 // createGame
 // - Needs to be called when dom root element (& DOM) is present.
-export function createFullscreen({
-    target = null,
-    bodyClassName = null
-  } = {}){
-
-  if (shared){
-    throw Error('[fullscreen] Only 1 instance of fullscreen can exist at a time')
+export function createFullscreen({ target = null, bodyClassName = null } = {}) {
+  if (shared) {
+    throw Error(
+      '[fullscreen] Only 1 instance of fullscreen can exist at a time',
+    );
   }
 
   target = target ? target : document.body;
 
-  const emitter = new EventEmitter()
+  const emitter = new EventEmitter();
   document.addEventListener('fullscreenchange', onChange);
 
+  // eslint-disable-next-line no-unused-vars
   function onChange(ev) {
-
     if (isFullscreen()) {
-      if (bodyClassName){
+      if (bodyClassName) {
         dom.addClass(document.body, bodyClassName);
       }
-      emitter.emit('change', true)
+      emitter.emit('change', true);
     } else {
-      if (bodyClassName){
+      if (bodyClassName) {
         dom.removeClass(document.body, bodyClassName);
       }
-      emitter.emit('change', false)
+      emitter.emit('change', false);
     }
   }
 
-  function toggle(forceState = null){
-
+  function toggle(forceState = null) {
     let toggle = true;
-    if (forceState === true || forceState === false){
-      if (forceState === isFullscreen()){
+    if (forceState === true || forceState === false) {
+      if (forceState === isFullscreen()) {
         return;
       }
       toggle = false;
-    } 
+    }
 
-    if((toggle && !isFullscreen()) || (!toggle && forceState)) {
-      const requestFullScreen = target.requestFullscreen || target.mozRequestFullScreen || target.webkitRequestFullScreen || target.msRequestFullscreen;
-      if (requestFullScreen){
+    if ((toggle && !isFullscreen()) || (!toggle && forceState)) {
+      const requestFullScreen =
+        target.requestFullscreen ||
+        target.mozRequestFullScreen ||
+        target.webkitRequestFullScreen ||
+        target.msRequestFullscreen;
+      if (requestFullScreen) {
         requestFullScreen.call(target);
       }
     } else {
-      const cancelFullScreen = document.exitFullscreen ||  document.mozCancelFullScreen ||  document.webkitExitFullscreen || document.msExitFullscreen;
-      if (cancelFullScreen){
+      const cancelFullScreen =
+        document.exitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.webkitExitFullscreen ||
+        document.msExitFullscreen;
+      if (cancelFullScreen) {
         cancelFullScreen.call(document);
       }
     }
-
   }
 
-  function enter(){
+  function enter() {
     toggle(true);
   }
 
-  function exit(){
+  function exit() {
     toggle(false);
   }
 
-  function destroy(){
+  function destroy() {
     target = null;
     shared = null;
     emitter.removeAllListeners();
@@ -87,19 +91,29 @@ export function createFullscreen({
     document.removeEventListener('fullscreenchange', onChange);
   }
 
-  function isSupported(){
-    return (document.fullscreenEnabled || document.mozFullscreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled) ? true : false;
+  function isSupported() {
+    return document.fullscreenEnabled ||
+      document.mozFullscreenEnabled ||
+      document.webkitFullscreenEnabled ||
+      document.msFullscreenEnabled
+      ? true
+      : false;
   }
 
-  function getFullscreenElement(){
-    if (!isSupported()){
+  function getFullscreenElement() {
+    if (!isSupported()) {
       return false;
     }
-    return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+    return (
+      document.fullscreenElement ||
+      document.mozFullScreenElement ||
+      document.webkitFullscreenElement ||
+      document.msFullscreenElement
+    );
   }
 
-  function isFullscreen(){    
-    if (!isSupported()){
+  function isFullscreen() {
+    if (!isSupported()) {
       return false;
     }
     return getFullscreenElement() ? true : false;
@@ -111,10 +125,8 @@ export function createFullscreen({
     enter,
     exit,
     isFullscreen,
-    destroy
-  }
+    destroy,
+  };
 
   return shared;
-
 }
-

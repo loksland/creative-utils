@@ -1,58 +1,42 @@
-
-
 export let shared;
 
-export function createKeyboard(){
-  
+export function createKeyboard() {
   const keyDownList = {};
 
-  function listen(enabled){
-
+  function listen(enabled) {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
 
-    if (!enabled){
+    if (!enabled) {
       return;
     }
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
-
-
   }
 
-  function onKeyDown(ev){
-
+  function onKeyDown(ev) {
     keyDownList[ev.keyCode] = true;
-
   }
 
-  function onKeyUp(ev){
-
-
+  function onKeyUp(ev) {
     keyDownList[ev.keyCode] = false;
-
-
   }
 
-  function isKeyDown(keyCode){
-
-    return keyDownList[keyCode]
+  function isKeyDown(keyCode) {
+    return keyDownList[keyCode];
   }
 
-  function kill(){
-    listen(false);
-    shared = null;
-  }
+  // function kill() {
+  //   listen(false);
+  //   shared = null;
+  // }
 
-  listen(true); 
+  listen(true);
 
   shared = {
-    isKeyDown    
-  }
+    isKeyDown,
+  };
 
   return shared;
-
 }
-
-

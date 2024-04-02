@@ -6,7 +6,7 @@ import gsap from 'gsap';
 export function killChildTweensOf(parent, complete) {
   var parents = gsap.utils.toArray(parent),
     i = parents.length,
-    _isDescendant = function(element) {
+    _isDescendant = function (element) {
       let parentProp = element.parent ? 'parent' : 'parentNode'; // PIXI display object : HTML Element
       while (element) {
         element = element[parentProp];
@@ -15,7 +15,9 @@ export function killChildTweensOf(parent, complete) {
         }
       }
     },
-    j, tweens, targets;
+    j,
+    tweens,
+    targets;
   if (i > 1) {
     while (--i > -1) {
       killChildTweensOf(parents[i], complete);

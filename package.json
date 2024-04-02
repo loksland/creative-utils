@@ -1,0 +1,26 @@
+{
+  "name": "creative-utils",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write \"utils/**/*.{js,ts}\"",
+    "lint": "eslint \"utils/**/*.{js,ts}\" --quiet"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1",
+    "gsap": "^3.12.5",
+    "howler": "^2.2.4",
+    "lil-gui": "^0.19.2",
+    "pixi.js": "^8.0.4",
+    "stats.js": "^0.17.0"
+  }
+}

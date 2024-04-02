@@ -1,12 +1,11 @@
 // Utils: import * as pixiUtils from '@/flipbook/utils/pixiUtils';
 
 import * as PIXI from 'pixi.js'; //'pixi.js';
-import { hash } from './str'
-import { keyCount } from './obj'
-import * as gsapUtils from './gsapUtils'
-import * as maths from './maths'
-import { log } from './debug'
-
+//import { hash } from './str';
+import { keyCount } from './obj';
+import * as gsapUtils from './gsapUtils';
+import * as maths from './maths';
+import { log } from './debug';
 
 // Will display any assets held on by
 // 1) PIXI.Assets.cache
@@ -14,7 +13,6 @@ import { log } from './debug'
 // 3) PIXI.utils.BaseTextureCache
 
 export function logCachedAssets() {
-
   // console.log('~~~')
   // console.log(PIXI.utils.TextureCache)
   // console.log('~~~')
@@ -25,11 +23,11 @@ export function logCachedAssets() {
 
   const _bundles = PIXI.Assets.resolver._bundles; // Private PIXI ref
   let bundleIDForAssetURL = {};
-  let bundles = {}  
-  for (let bundleID in _bundles){
+  let bundles = {};
+  for (let bundleID in _bundles) {
     bundles[bundleID] = {};
     bundles[bundleID].assets = [];
-    for (let assetKey of _bundles[bundleID]){
+    for (let assetKey of _bundles[bundleID]) {
       const assetURL = PIXI.Assets.resolver.resolveUrl(assetKey);
       bundleIDForAssetURL[assetURL] = bundleID;
     }
@@ -37,86 +35,97 @@ export function logCachedAssets() {
 
   let spritesheetURLForTxURL = {};
   let cache = PIXI.Assets.cache._cache; // Private PIXI ref
-  for (let [key,val] of cache){
+  for (let [key, val] of cache) {
     const url = PIXI.Assets.resolver.resolveUrl(key);
-    if (val instanceof PIXI.Spritesheet && bundleIDForAssetURL[url]){
-      for (let txKey in val.textures){
+    if (val instanceof PIXI.Spritesheet && bundleIDForAssetURL[url]) {
+      for (let txKey in val.textures) {
         const txURL = PIXI.Assets.resolver.resolveUrl(txKey);
         spritesheetURLForTxURL[txURL] = url;
-        if (bundleIDForAssetURL[url]){
+        if (bundleIDForAssetURL[url]) {
           bundleIDForAssetURL[txURL] = bundleIDForAssetURL[url]; // Use spritesheet's bundle
         }
-      } 
+      }
     }
   }
 
   let noBundleID = '_nobundle';
   let cacheList = {};
-  let txBySpritesheetURL = {}
-  
+  let txBySpritesheetURL = {};
+
   let cacheEntries = {}; // key => value
-  for (let [key,val] of cache){
+  for (let [key, val] of cache) {
     const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = {asset:val, store:'PIXI.Assets.cache'}
+    cacheEntries[url] = { asset: val, store: 'PIXI.Assets.cache' };
   }
-  for (let key in  PIXI.utils.TextureCache){
+  for (let key in PIXI.utils.TextureCache) {
     const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = {asset: PIXI.utils.TextureCache[key], store:'PIXI.utils.TextureCache'}
+    cacheEntries[url] = {
+      asset: PIXI.utils.TextureCache[key],
+      store: 'PIXI.utils.TextureCache',
+    };
   }
-  for (let key in  PIXI.utils.BaseTextureCache){
+  for (let key in PIXI.utils.BaseTextureCache) {
     const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = {asset: PIXI.utils.BaseTextureCache[key], store:'PIXI.utils.BaseTextureCache'}
+    cacheEntries[url] = {
+      asset: PIXI.utils.BaseTextureCache[key],
+      store: 'PIXI.utils.BaseTextureCache',
+    };
   }
 
-  for (let url in cacheEntries){
+  for (let url in cacheEntries) {
+    const val = cacheEntries[url].asset;
 
-    const val = cacheEntries[url].asset
-
-    let bundleID = bundleIDForAssetURL[url] ? bundleIDForAssetURL[url] : noBundleID;
-    if (!cacheList[bundleID]){
+    let bundleID = bundleIDForAssetURL[url]
+      ? bundleIDForAssetURL[url]
+      : noBundleID;
+    if (!cacheList[bundleID]) {
       cacheList[bundleID] = {};
     }
 
-    if (!cacheList[bundleID][url]){
-      let assetInfo = {}
+    if (!cacheList[bundleID][url]) {
+      let assetInfo = {};
       // assetInfo.url = url;
-      if (val instanceof PIXI.Spritesheet){
-        assetInfo.type = 'PIXI.Spritesheet'
-        assetInfo.baseTxUID = val.baseTexture.uid
-      } else if (val instanceof PIXI.Texture){
-        assetInfo.type = 'PIXI.Texture'
+      if (val instanceof PIXI.Spritesheet) {
+        assetInfo.type = 'PIXI.Spritesheet';
         assetInfo.baseTxUID = val.baseTexture.uid;
-        assetInfo.spritesheetURL = spritesheetURLForTxURL[url]
-        if (spritesheetURLForTxURL[url]){
-          if (!txBySpritesheetURL[spritesheetURLForTxURL[url]]){
+      } else if (val instanceof PIXI.Texture) {
+        assetInfo.type = 'PIXI.Texture';
+        assetInfo.baseTxUID = val.baseTexture.uid;
+        assetInfo.spritesheetURL = spritesheetURLForTxURL[url];
+        if (spritesheetURLForTxURL[url]) {
+          if (!txBySpritesheetURL[spritesheetURLForTxURL[url]]) {
             txBySpritesheetURL[spritesheetURLForTxURL[url]] = {};
           }
-          if (!txBySpritesheetURL[spritesheetURLForTxURL[url]][url]){
-            txBySpritesheetURL[spritesheetURLForTxURL[url]][url] = assetInfo
+          if (!txBySpritesheetURL[spritesheetURLForTxURL[url]][url]) {
+            txBySpritesheetURL[spritesheetURLForTxURL[url]][url] = assetInfo;
           }
           assetInfo = null;
-        } 
-      } else if (val instanceof PIXI.BaseTexture){
-        assetInfo.type = 'PIXI.BaseTexture'
+        }
+      } else if (val instanceof PIXI.BaseTexture) {
+        assetInfo.type = 'PIXI.BaseTexture';
         assetInfo.uid = val.uid;
-      } else if (typeof val === 'object' && url.toLowerCase().endsWith('.json')){
-        assetInfo.type = 'JSON'
+      } else if (
+        typeof val === 'object' &&
+        url.toLowerCase().endsWith('.json')
+      ) {
+        assetInfo.type = 'JSON';
       }
-      
-      if (assetInfo){
-        if (bundleID === noBundleID){
-          assetInfo.store = cacheEntries[url].store
+
+      if (assetInfo) {
+        if (bundleID === noBundleID) {
+          assetInfo.store = cacheEntries[url].store;
         }
         cacheList[bundleID][url] = assetInfo;
       }
     }
-
   }
-  
-  for (let bundleID in cacheList){
-    for (let assetURL in cacheList[bundleID]){
-      if (cacheList[bundleID][assetURL].type === 'PIXI.Spritesheet' && 
-      txBySpritesheetURL[assetURL]){
+
+  for (let bundleID in cacheList) {
+    for (let assetURL in cacheList[bundleID]) {
+      if (
+        cacheList[bundleID][assetURL].type === 'PIXI.Spritesheet' &&
+        txBySpritesheetURL[assetURL]
+      ) {
         cacheList[bundleID][assetURL].textures = txBySpritesheetURL[assetURL];
       }
     }
@@ -126,148 +135,139 @@ export function logCachedAssets() {
 
   // let cacheList = deepClone(cacheList);
 
-  const assetToOneLineOutput = (asset)=>{
-    let output = []
+  const assetToOneLineOutput = (asset) => {
+    let output = [];
     output.push(asset.type);
     delete asset.type;
-    for (let prop in asset){
+    for (let prop in asset) {
       output.push(`${prop}:${asset[prop]}`);
     }
-    return output.join(' ')
-  }
+    return output.join(' ');
+  };
 
   let totalAssets = 0;
   let output = [];
-  for (let bundleID in cacheList){
+  for (let bundleID in cacheList) {
+    let bundleAssetTotal = keyCount(cacheList[bundleID]);
 
-    let bundleAssetTotal = keyCount(cacheList[bundleID])
-
-    for (let assetURL in cacheList[bundleID]){
+    for (let assetURL in cacheList[bundleID]) {
       const asset = cacheList[bundleID][assetURL];
       asset.url = assetURL;
-      if (asset.type === 'PIXI.Spritesheet'){
-        const totalTxs = keyCount(asset.textures)
+      if (asset.type === 'PIXI.Spritesheet') {
+        const totalTxs = keyCount(asset.textures);
         bundleAssetTotal += totalTxs;
         asset.textures = totalTxs;
       }
       output.push('  - ' + assetToOneLineOutput(asset));
     }
 
-    output.push(`  Bundle: ${bundleID === noBundleID ? '*none*' : `'${bundleID}'`} (${bundleAssetTotal})`);
+    output.push(
+      `  Bundle: ${bundleID === noBundleID ? '*none*' : `'${bundleID}'`} (${bundleAssetTotal})`,
+    );
 
     totalAssets += bundleAssetTotal;
-
   }
 
-  output.push(`Cache (${totalAssets})`)
+  output.push(`Cache (${totalAssets})`);
 
   // console.dir(cacheList);
-  
+
   log(output.reverse().join('\n'));
-
 }
 
-function textureUID(tx){
+// function textureUID(tx) {
+//   if (!(tx instanceof PIXI.Texture)) {
+//     return null;
+//   }
+//   return hash(tx.textureCacheIds.join(',')).toUpperCase();
+// }
 
-  if (!(tx instanceof PIXI.Texture)){
-    return null;
-  }
-  return hash(tx.textureCacheIds.join(',')).toUpperCase();;
-}
-
-export async function destroyApp(app){
-
+export async function destroyApp(app) {
   PIXI.Ticker.shared.stop();
 
-  gsapUtils.killChildTweensOf(app.stage)
+  gsapUtils.killChildTweensOf(app.stage);
 
-  app.destroy(true, { // remove the view (canvas) from DOM
+  app.destroy(true, {
+    // remove the view (canvas) from DOM
     children: true, // All the children will have their destroy method called as well. 'stageOptions' will be passed on to those calls.
     texture: true, // Should it destroy the texture of the child sprite
-    baseTexture: true // Should it destroy the base texture of the child sprite
-  })
+    baseTexture: true, // Should it destroy the base texture of the child sprite
+  });
 
   await destroyAllAssets();
-
 }
 
-export async function destroyAllAssets(){
-
+export async function destroyAllAssets() {
   await PIXI.Assets.reset(); // This will wipe the resolver and caches. You will need to reinitialize the Asset
 
   // Remove any remaining textures from the cache.
-  for (let key in PIXI.utils.TextureCache){
+  for (let key in PIXI.utils.TextureCache) {
     PIXI.utils.TextureCache[key].destroy(true); // true: destroy base
     PIXI.Texture.removeFromCache(key);
   }
 
-  for (let key in PIXI.utils.BaseTextureCache){
+  for (let key in PIXI.utils.BaseTextureCache) {
     PIXI.utils.BaseTextureCache[key].destroy();
     PIXI.BaseTexture.removeFromCache(key);
   }
-
 }
 
 /**
  * Returns a string representation of children of the given display object.
  */
-export function logStack(dispo, level = 0){
-
+export function logStack(dispo, level = 0) {
   let output = [];
 
-  const info = getLogSummary(dispo)
+  const info = getLogSummary(dispo);
   //info.children = dispo.children.length;
 
-  if (level == 0){
+  if (level == 0) {
     output.push(info);
   } else {
-    output.push('  '.repeat(level-1) + '- ' + info);
+    output.push('  '.repeat(level - 1) + '- ' + info);
   }
-  
-  if (dispo.children){
-    for (let i = dispo.children.length - 1; i >= 0; i--){
+
+  if (dispo.children) {
+    for (let i = dispo.children.length - 1; i >= 0; i--) {
       let child = dispo.children[i];
-      output = output.concat(logStack(child, level+1));
+      output = output.concat(logStack(child, level + 1));
     }
   }
 
-  if (level == 0){
+  if (level == 0) {
     log(output.join('\n')); //window['c' + 'onsole']['l' + 'og'](output.join('\n'))
   } else {
     return output;
   }
-
 }
 
-export function getLogSummary(dispo){
-
-  return _stackInfoToOneLineOutput(_getDisplayObjectInfo(dispo))
-
+export function getLogSummary(dispo) {
+  return _stackInfoToOneLineOutput(_getDisplayObjectInfo(dispo));
 }
 
-function _getDisplayObjectInfo(dispo){
+function _getDisplayObjectInfo(dispo) {
   let info = {};
   info.constructorClassName = _dispoContructorClassName(dispo);
-  info.pixiClassName = _dispoToPixiClassName(dispo)
+  info.pixiClassName = _dispoToPixiClassName(dispo);
   info.name = dispo.name;
-  info.pos = `${_clipFloat(dispo.x)},${_clipFloat(dispo.y)}`
-  if (info.pixiClassName !== 'Container'){
-    info.dims = `${_clipFloat(dispo.width)}x${_clipFloat(dispo.height)}`
-  } 
-  info.scale = `${_clipFloat(dispo.scale.x)}x${_clipFloat(dispo.scale.y)}`
-  info.visible = dispo.visible ? 'Y' : 'N'  
-  info.alpha = _clipFloat(dispo.alpha)
+  info.pos = `${_clipFloat(dispo.x)},${_clipFloat(dispo.y)}`;
+  if (info.pixiClassName !== 'Container') {
+    info.dims = `${_clipFloat(dispo.width)}x${_clipFloat(dispo.height)}`;
+  }
+  info.scale = `${_clipFloat(dispo.scale.x)}x${_clipFloat(dispo.scale.y)}`;
+  info.visible = dispo.visible ? 'Y' : 'N';
+  info.alpha = _clipFloat(dispo.alpha);
   return info;
 }
 
-function _stackInfoToOneLineOutput(info){
+function _stackInfoToOneLineOutput(info) {
   let output = [];
 
   let name = info.pixiClassName;
-  if (info.constructorClassName){
+  if (info.constructorClassName) {
     name += `[${info.constructorClassName}]`;
-  } 
-  if (info.name){
+  }
+  if (info.name) {
     name += `:'${info.name}'`;
   }
   output.push(name);
@@ -276,50 +276,49 @@ function _stackInfoToOneLineOutput(info){
   delete info.pixiClassName;
   delete info.constructorClassName;
 
-  for (let prop in info){
+  for (let prop in info) {
     output.push(`${prop}:${info[prop]}`);
   }
 
-  return output.join(' ')
+  return output.join(' ');
 }
 
-function _clipFloat(num){
-  return Math.round(num*100)/100;
+function _clipFloat(num) {
+  return Math.round(num * 100) / 100;
 }
 
-let dispoClassNameCache;
-function _dispoContructorClassName(dispo){
+//let dispoClassNameCache;
+function _dispoContructorClassName(dispo) {
   const constructorName = dispo.constructor.name;
   return constructorName.startsWith('_') ? null : constructorName;
 }
 
-function _dispoToPixiClassName(dispo){
-  if (isContainer(dispo)){
-    return 'Container'
-  } else if (isAnimatedSprite(dispo)){
-    return 'AnimatedSprite'
-  } else if (dispo.isSprite){
-    return 'Sprite'
+function _dispoToPixiClassName(dispo) {
+  if (isContainer(dispo)) {
+    return 'Container';
+  } else if (isAnimatedSprite(dispo)) {
+    return 'AnimatedSprite';
+  } else if (dispo.isSprite) {
+    return 'Sprite';
   } else {
-    return 'Other'
+    return 'Other';
   }
 }
 
-function isContainer(dispo){
+function isContainer(dispo) {
   return !dispo.isSprite && typeof dispo.addChildAt === 'function';
 }
 
-export function isAnimatedSprite(dispo){
+export function isAnimatedSprite(dispo) {
   return dispo.isSprite && typeof dispo.animationSpeed === 'number';
 }
 
-export function isDisplayObject(obj){
-  if (!obj || typeof obj !== 'object'){
+export function isDisplayObject(obj) {
+  if (!obj || typeof obj !== 'object') {
     return false;
   }
   return obj instanceof PIXI.DisplayObject;
 }
-
 
 /**
  * Returns `true` if the display object is a `PIXI.AnimatedSprite`.
@@ -328,8 +327,6 @@ export function isDisplayObject(obj){
 // PIXI.AnimatedSprite.prototype.isAnimatedSprite = function(){
 //   return true;
 // }
-
-
 
 /**
  * Brings display object to the top of the display stack.
@@ -351,41 +348,57 @@ export function isDisplayObject(obj){
 
 /**
  * Applies the supplied pivot to the display object without moving the position, even if rotated.
- * 
+ *
  * @param {PIXI.DisplayObject} displayObject - Target.
  * @param {PIXI.Point} pivot - Pivot point, in parent coord space.
  */
-export function applyParentPivot(displayObject, pivotPt){
-  
-  const translatedPt = translatePointToCoordSpace(pivotPt, displayObject.parent, displayObject);
- 
-  setPivotWithoutMoving(displayObject, translatedPt)
+export function applyParentPivot(displayObject, pivotPt) {
+  const translatedPt = translatePointToCoordSpace(
+    pivotPt,
+    displayObject.parent,
+    displayObject,
+  );
 
+  setPivotWithoutMoving(displayObject, translatedPt);
 }
 
 /**
  * Applies the supplied pivot to the display object without moving the position, even if rotated.
- * 
+ *
  * @param {PIXI.DisplayObject} displayObject - Target.
  * @param {PIXI.Point} pivot - Pivot point, in internal coords (as per PIXI docs).
  */
-export function setPivotWithoutMoving(displayObject, pivotPt){
+export function setPivotWithoutMoving(displayObject, pivotPt) {
+  const pivotOffset = new PIXI.Point(
+    pivotPt.x - displayObject.pivot.x,
+    pivotPt.y - displayObject.pivot.y,
+  );
 
-  const pivotOffset = new PIXI.Point(pivotPt.x-displayObject.pivot.x,pivotPt.y-displayObject.pivot.y);
- 
-  displayObject.pivot.copyFrom(pivotPt)
+  displayObject.pivot.copyFrom(pivotPt);
 
   // const angOffset = 0.0;
-  const pivotOffsetScaled = new PIXI.Point(pivotOffset.x * displayObject.scale.x, pivotOffset.y * displayObject.scale.y)
+  const pivotOffsetScaled = new PIXI.Point(
+    pivotOffset.x * displayObject.scale.x,
+    pivotOffset.y * displayObject.scale.y,
+  );
 
-  const zeroPt = new PIXI.Point(0.0,0.0);
-  const pivotOffsetDist = maths.distanceBetweenPoints(zeroPt, pivotOffsetScaled);
-  const pivotOffsetAng = maths.angleDegsBetweenPoints(zeroPt, pivotOffsetScaled);
-  
-  const pos = maths.projectAngleDegsFromPoint(displayObject.position, pivotOffsetAng+displayObject.angle, pivotOffsetDist);
+  const zeroPt = new PIXI.Point(0.0, 0.0);
+  const pivotOffsetDist = maths.distanceBetweenPoints(
+    zeroPt,
+    pivotOffsetScaled,
+  );
+  const pivotOffsetAng = maths.angleDegsBetweenPoints(
+    zeroPt,
+    pivotOffsetScaled,
+  );
+
+  const pos = maths.projectAngleDegsFromPoint(
+    displayObject.position,
+    pivotOffsetAng + displayObject.angle,
+    pivotOffsetDist,
+  );
 
   displayObject.position.copyFrom(pos);
-
 }
 
 /**
@@ -457,10 +470,8 @@ export function setPivotWithoutMoving(displayObject, pivotPt){
  * Point will remain in place from one parent coord space to another
  * <br>- See {@link https://pixijs.download/dev/docs/PIXI.AnimatedSprite.html#toGlobal}
  */
-export function translatePointToCoordSpace(pt, oldParent, newParent){
-
+export function translatePointToCoordSpace(pt, oldParent, newParent) {
   return newParent.toLocal(pt, oldParent);
-
 }
 
 /**
@@ -472,7 +483,6 @@ export function translatePointToCoordSpace(pt, oldParent, newParent){
 //   return newParent.toLocal(this, oldParent, this);
 
 // }
-
 
 /**
  * Returns true if display object has applied cache as bitmap.
@@ -535,7 +545,6 @@ export function translatePointToCoordSpace(pt, oldParent, newParent){
 
 // const MAX_SHAKE_ROT = 2.0;
 // const MAX_SHAKE_OFFSET_ART = 15.0*0.5;
-
 
 /**
  * Will apply a cumulative screen shake and rotation.
@@ -614,7 +623,6 @@ export function translatePointToCoordSpace(pt, oldParent, newParent){
 //   }
 // }
 
-
 // Simple Button
 // -------------
 
@@ -635,7 +643,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent){
 //     if (isContainer){
 //       const debugHitBtn = false;
 //       // Add a layer to collect hit events for the button, as containers have no bounds.
-//       const hit = new Sprite(debugHitBtn ? PIXI.Texture.WHITE : PIXI.Texture.EMPTY);﻿
+//       const hit = new Sprite(debugHitBtn ? PIXI.Texture.WHITE : PIXI.Texture.EMPTY);
 //       hit.name = '__btnhit';
 //       hit.width = this.txInfo._proj.width;
 //       hit.height = this.txInfo._proj.height;

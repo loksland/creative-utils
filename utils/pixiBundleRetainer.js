@@ -15,13 +15,13 @@ await PIXI.Assets.unloadBundle(unretain('level1'));
 
 export const bundleRetainCounts = {};
 
-export function retain(bundleID) {  
+export function retain(bundleID) {
   retainBundle(bundleID, true);
   return bundleID;
 }
 
-export function unretain(bundleID){
-  if (retainBundle(bundleID, false) === 0){
+export function unretain(bundleID) {
+  if (retainBundle(bundleID, false) === 0) {
     delete bundleRetainCounts[bundleID];
     return bundleID;
   } else {
@@ -29,16 +29,16 @@ export function unretain(bundleID){
   }
 }
 
-export function clearRetains(bundleID){
-  for (let bundleID in bundleRetainCounts){
-    delete bundleRetainCounts[bundleID]
-  }
-}
+// export function clearRetains(bundleID) {
+//   for (let bundleID in bundleRetainCounts) {
+//     delete bundleRetainCounts[bundleID];
+//   }
+// }
 
-function retainBundle(bundleID, retain){
-  if (!bundleRetainCounts[bundleID]){
+function retainBundle(bundleID, retain) {
+  if (!bundleRetainCounts[bundleID]) {
     bundleRetainCounts[bundleID] = 0;
   }
   bundleRetainCounts[bundleID] += retain ? 1 : -1;
   return bundleRetainCounts[bundleID];
-}  
+}
