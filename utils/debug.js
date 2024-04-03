@@ -9,7 +9,6 @@ debug?.destroy();
 */
 import Stats from 'stats.js';
 import GUI from 'lil-gui';
-import * as pixiUtils from './pixiUtils';
 
 // import { shared as game } from '@/game/game'
 
@@ -68,8 +67,8 @@ export function log(idPrefix, title, val) {
     val = JSON.stringify(
       val,
       function (key, val) {
-        if (pixiUtils.isDisplayObject(val)) {
-          return pixiUtils.getLogSummary(val);
+        if (typeof val === 'object' && typeof val.label === 'string') {
+          return val.label; // PIXI object
         }
         return val;
       },
