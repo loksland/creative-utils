@@ -29,16 +29,21 @@ export function unretain(bundleID) {
   }
 }
 
-// export function clearRetains(bundleID) {
-//   for (let bundleID in bundleRetainCounts) {
-//     delete bundleRetainCounts[bundleID];
-//   }
-// }
+export function clearRetains(bundleID = null) {
+  if (bundleID) {
+    delete bundleRetainCounts[bundleID];
+    return;
+  }
+  for (let _bundleID in bundleRetainCounts) {
+    delete bundleRetainCounts[_bundleID];
+  }
+}
 
 function retainBundle(bundleID, retain) {
   if (!bundleRetainCounts[bundleID]) {
     bundleRetainCounts[bundleID] = 0;
   }
   bundleRetainCounts[bundleID] += retain ? 1 : -1;
+  bundleRetainCounts[bundleID] = Math.max(0, bundleRetainCounts[bundleID]);
   return bundleRetainCounts[bundleID];
 }
