@@ -1,45 +1,47 @@
 // Utils: import * as pixiUtils from '@/flipbook/utils/pixiUtils';
 
-import * as PIXI from 'pixi.js'; //'pixi.js';
-//import { hash } from './str';
+import {
+  Assets,
+  Spritesheet,
+  //BaseTexture,
+  Point,
+  Texture,
+  // TextureCache,
+  //BaseTextureCache,
+  Ticker,
+} from 'pixi.js'; // PIXI v8
 import { keyCount } from './obj';
-import * as gsapUtils from './gsapUtils';
 import * as maths from './maths';
 import { log } from './debug';
 
-// Will display any assets held on by
-// 1) PIXI.Assets.cache
-// 2) PIXI.utils.TextureCache
-// 3) PIXI.utils.BaseTextureCache
+
 
 export function logCachedAssets() {
-  // console.log('~~~')
-  // console.log(PIXI.utils.TextureCache)
-  // console.log('~~~')
-  // console.log(PIXI.utils.BaseTextureCache)
-  // console.log('~~~')
 
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
-
-  const _bundles = PIXI.Assets.resolver._bundles; // Private PIXI ref
+  const _bundles = Assets.resolver._bundles; // Private PIXI ref
   let bundleIDForAssetURL = {};
   let bundles = {};
   for (let bundleID in _bundles) {
     bundles[bundleID] = {};
     bundles[bundleID].assets = [];
     for (let assetKey of _bundles[bundleID]) {
-      const assetURL = PIXI.Assets.resolver.resolveUrl(assetKey);
+      const assetURL = Assets.resolver.resolveUrl(assetKey);
       bundleIDForAssetURL[assetURL] = bundleID;
     }
   }
 
   let spritesheetURLForTxURL = {};
-  let cache = PIXI.Assets.cache._cache; // Private PIXI ref
+  let cache = Assets.cache._cache; // Private PIXI ref
   for (let [key, val] of cache) {
-    const url = PIXI.Assets.resolver.resolveUrl(key);
-    if (val instanceof PIXI.Spritesheet && bundleIDForAssetURL[url]) {
+    const url = Assets.resolver.resolveUrl(key);
+
+
+    if (val instanceof Spritesheet && bundleIDForAssetURL[url]) {
+
       for (let txKey in val.textures) {
-        const txURL = PIXI.Assets.resolver.resolveUrl(txKey);
+
+        const txURL = Assets.resolver.resolveUrl(txKey);
         spritesheetURLForTxURL[txURL] = url;
         if (bundleIDForAssetURL[url]) {
           bundleIDForAssetURL[txURL] = bundleIDForAssetURL[url]; // Use spritesheet's bundle
@@ -54,23 +56,24 @@ export function logCachedAssets() {
 
   let cacheEntries = {}; // key => value
   for (let [key, val] of cache) {
-    const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = { asset: val, store: 'PIXI.Assets.cache' };
+    const url = Assets.resolver.resolveUrl(key);
+    cacheEntries[url] = { asset: val, store: 'Assets.cache' };
   }
-  for (let key in PIXI.utils.TextureCache) {
-    const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = {
-      asset: PIXI.utils.TextureCache[key],
-      store: 'PIXI.utils.TextureCache',
-    };
-  }
-  for (let key in PIXI.utils.BaseTextureCache) {
-    const url = PIXI.Assets.resolver.resolveUrl(key);
-    cacheEntries[url] = {
-      asset: PIXI.utils.BaseTextureCache[key],
-      store: 'PIXI.utils.BaseTextureCache',
-    };
-  }
+
+  // for (let key in TextureCache) {
+  //   const url = Assets.resolver.resolveUrl(key);
+  //   cacheEntries[url] = {
+  //     asset: TextureCache[key],
+  //     store: 'TextureCache',
+  //   };
+  // }
+  // for (let key in BaseTextureCache) {
+  //   const url = Assets.resolver.resolveUrl(key);
+  //   cacheEntries[url] = {
+  //     asset: BaseTextureCache[key],
+  //     store: 'BaseTextureCache',
+  //   };
+  // }
 
   for (let url in cacheEntries) {
     const val = cacheEntries[url].asset;
@@ -85,12 +88,12 @@ export function logCachedAssets() {
     if (!cacheList[bundleID][url]) {
       let assetInfo = {};
       // assetInfo.url = url;
-      if (val instanceof PIXI.Spritesheet) {
-        assetInfo.type = 'PIXI.Spritesheet';
-        assetInfo.baseTxUID = val.baseTexture.uid;
-      } else if (val instanceof PIXI.Texture) {
-        assetInfo.type = 'PIXI.Texture';
-        assetInfo.baseTxUID = val.baseTexture.uid;
+      if (val instanceof Spritesheet) {
+        assetInfo.type = 'Spritesheet';
+        //assetInfo.baseTxUID = val.baseTexture.uid;
+      } else if (val instanceof Texture) {
+        assetInfo.type = 'Texture';
+        //assetInfo.baseTxUID = val.baseTexture.uid;
         assetInfo.spritesheetURL = spritesheetURLForTxURL[url];
         if (spritesheetURLForTxURL[url]) {
           if (!txBySpritesheetURL[spritesheetURLForTxURL[url]]) {
@@ -101,9 +104,6 @@ export function logCachedAssets() {
           }
           assetInfo = null;
         }
-      } else if (val instanceof PIXI.BaseTexture) {
-        assetInfo.type = 'PIXI.BaseTexture';
-        assetInfo.uid = val.uid;
       } else if (
         typeof val === 'object' &&
         url.toLowerCase().endsWith('.json')
@@ -123,7 +123,7 @@ export function logCachedAssets() {
   for (let bundleID in cacheList) {
     for (let assetURL in cacheList[bundleID]) {
       if (
-        cacheList[bundleID][assetURL].type === 'PIXI.Spritesheet' &&
+        cacheList[bundleID][assetURL].type === 'Spritesheet' &&
         txBySpritesheetURL[assetURL]
       ) {
         cacheList[bundleID][assetURL].textures = txBySpritesheetURL[assetURL];
@@ -153,7 +153,7 @@ export function logCachedAssets() {
     for (let assetURL in cacheList[bundleID]) {
       const asset = cacheList[bundleID][assetURL];
       asset.url = assetURL;
-      if (asset.type === 'PIXI.Spritesheet') {
+      if (asset.type === 'Spritesheet') {
         const totalTxs = keyCount(asset.textures);
         bundleAssetTotal += totalTxs;
         asset.textures = totalTxs;
@@ -176,41 +176,44 @@ export function logCachedAssets() {
 }
 
 // function textureUID(tx) {
-//   if (!(tx instanceof PIXI.Texture)) {
+//   if (!(tx instanceof Texture)) {
 //     return null;
 //   }
 //   return hash(tx.textureCacheIds.join(',')).toUpperCase();
 // }
 
-export async function destroyApp(app) {
-  PIXI.Ticker.shared.stop();
+// export async function destroyApp(app) {
 
-  gsapUtils.killChildTweensOf(app.stage);
+//   Ticker.shared.stop();
 
-  app.destroy(true, {
-    // remove the view (canvas) from DOM
-    children: true, // All the children will have their destroy method called as well. 'stageOptions' will be passed on to those calls.
-    texture: true, // Should it destroy the texture of the child sprite
-    baseTexture: true, // Should it destroy the base texture of the child sprite
-  });
+//   // gsapUtils.killChildTweensOf(app.stage);
 
-  await destroyAllAssets();
-}
+//   app.destroy(true, {
+//     // remove the view (canvas) from DOM
+//     children: true, // All the children will have their destroy method called as well. 'stageOptions' will be passed on to those calls.
+//     texture: true, // Should it destroy the texture of the child sprite
+//     baseTexture: true, // Should it destroy the base texture of the child sprite
+//   });
 
-export async function destroyAllAssets() {
-  await PIXI.Assets.reset(); // This will wipe the resolver and caches. You will need to reinitialize the Asset
+//   // await destroyAllAssets();
+//   await Assets.reset();
+// }
 
-  // Remove any remaining textures from the cache.
-  for (let key in PIXI.utils.TextureCache) {
-    PIXI.utils.TextureCache[key].destroy(true); // true: destroy base
-    PIXI.Texture.removeFromCache(key);
-  }
+// export async function destroyAllAssets() {
 
-  for (let key in PIXI.utils.BaseTextureCache) {
-    PIXI.utils.BaseTextureCache[key].destroy();
-    PIXI.BaseTexture.removeFromCache(key);
-  }
-}
+//   await Assets.reset(); // This will wipe the resolver and caches. You will need to reinitialize the Asset
+
+//   // Remove any remaining textures from the cache.
+//   // for (let key in TextureCache) {
+//   //   TextureCache[key].destroy(true); // true: destroy base
+//   //   Texture.removeFromCache(key);
+//   // }
+
+//   // for (let key in BaseTextureCache) {
+//   //   BaseTextureCache[key].destroy();
+//   //   //BaseTexture.removeFromCache(key);
+//   // }
+// }
 
 /**
  * Returns a string representation of children of the given display object.
@@ -249,7 +252,7 @@ function _getDisplayObjectInfo(dispo) {
   let info = {};
   info.constructorClassName = _dispoContructorClassName(dispo);
   info.pixiClassName = _dispoToPixiClassName(dispo);
-  info.name = dispo.name;
+  info.label = dispo.label;
   info.pos = `${_clipFloat(dispo.x)},${_clipFloat(dispo.y)}`;
   if (info.pixiClassName !== 'Container') {
     info.dims = `${_clipFloat(dispo.width)}x${_clipFloat(dispo.height)}`;
@@ -267,12 +270,12 @@ function _stackInfoToOneLineOutput(info) {
   if (info.constructorClassName) {
     name += `[${info.constructorClassName}]`;
   }
-  if (info.name) {
-    name += `:'${info.name}'`;
+  if (info.label) {
+    name += `:'${info.label}'`;
   }
   output.push(name);
 
-  delete info.name;
+  delete info.label;
   delete info.pixiClassName;
   delete info.constructorClassName;
 
@@ -298,7 +301,7 @@ function _dispoToPixiClassName(dispo) {
     return 'Container';
   } else if (isAnimatedSprite(dispo)) {
     return 'AnimatedSprite';
-  } else if (dispo.isSprite) {
+  } else if (dispo.texture) {
     return 'Sprite';
   } else {
     return 'Other';
@@ -306,19 +309,14 @@ function _dispoToPixiClassName(dispo) {
 }
 
 function isContainer(dispo) {
-  return !dispo.isSprite && typeof dispo.addChildAt === 'function';
+  return (typeof dispo.texture === 'undefined') && dispo.allowChildren;
 }
 
 export function isAnimatedSprite(dispo) {
-  return dispo.isSprite && typeof dispo.animationSpeed === 'number';
+  return (typeof dispo.texture !== 'undefined') && (typeof dispo.animationSpeed === 'number');
 }
 
-export function isDisplayObject(obj) {
-  if (!obj || typeof obj !== 'object') {
-    return false;
-  }
-  return obj instanceof PIXI.DisplayObject;
-}
+
 
 /**
  * Returns `true` if the display object is a `PIXI.AnimatedSprite`.
@@ -332,7 +330,7 @@ export function isDisplayObject(obj) {
  * Brings display object to the top of the display stack.
  * <br>- Will throw an error if display object doesn't have a parent.
  */
-// PIXI.DisplayObject.prototype.bringToFront = function(){
+// DisplayObject.prototype.bringToFront = function(){
 
 //   this.parent.setChildIndex(this, this.parent.children.length - 1)
 
@@ -342,15 +340,15 @@ export function isDisplayObject(obj) {
  * Sends display object to the back of the display stack.
  * <br>- Will throw an error if display object doesn't have a parent.
  */
-// PIXI.DisplayObject.prototype.sendToBack = function(){
+// DisplayObject.prototype.sendToBack = function(){
 //   this.parent.setChildIndex(this, 0)
 // }
 
 /**
  * Applies the supplied pivot to the display object without moving the position, even if rotated.
  *
- * @param {PIXI.DisplayObject} displayObject - Target.
- * @param {PIXI.Point} pivot - Pivot point, in parent coord space.
+ * @param {DisplayObject} displayObject - Target.
+ * @param {Point} pivot - Pivot point, in parent coord space.
  */
 export function applyParentPivot(displayObject, pivotPt) {
   const translatedPt = translatePointToCoordSpace(
@@ -365,11 +363,11 @@ export function applyParentPivot(displayObject, pivotPt) {
 /**
  * Applies the supplied pivot to the display object without moving the position, even if rotated.
  *
- * @param {PIXI.DisplayObject} displayObject - Target.
- * @param {PIXI.Point} pivot - Pivot point, in internal coords (as per PIXI docs).
+ * @param {DisplayObject} displayObject - Target.
+ * @param {Point} pivot - Pivot point, in internal coords (as per PIXI docs).
  */
 export function setPivotWithoutMoving(displayObject, pivotPt) {
-  const pivotOffset = new PIXI.Point(
+  const pivotOffset = new Point(
     pivotPt.x - displayObject.pivot.x,
     pivotPt.y - displayObject.pivot.y,
   );
@@ -377,12 +375,12 @@ export function setPivotWithoutMoving(displayObject, pivotPt) {
   displayObject.pivot.copyFrom(pivotPt);
 
   // const angOffset = 0.0;
-  const pivotOffsetScaled = new PIXI.Point(
+  const pivotOffsetScaled = new Point(
     pivotOffset.x * displayObject.scale.x,
     pivotOffset.y * displayObject.scale.y,
   );
 
-  const zeroPt = new PIXI.Point(0.0, 0.0);
+  const zeroPt = new Point(0.0, 0.0);
   const pivotOffsetDist = maths.distanceBetweenPoints(
     zeroPt,
     pivotOffsetScaled,
@@ -445,7 +443,7 @@ export function setPivotWithoutMoving(displayObject, pivotPt) {
  * <br>- Will throw an error if display object has not got a parent.
  * @param {boolean} [updatePosition=true] - If true will updated the child's position as well.
  */
-// PIXI.DisplayObject.prototype.adjustForParentScale = function(updatePosition = false){
+// DisplayObject.prototype.adjustForParentScale = function(updatePosition = false){
 
 //   this.scale.x *= Math.abs(1.0/this.parent.scale.x);
 //   this.scale.y *= Math.abs(1.0/this.parent.scale.y);
@@ -460,7 +458,7 @@ export function setPivotWithoutMoving(displayObject, pivotPt) {
  * Display object will remain in place from one parent coord space to another
  * <br>- See {@link https://pixijs.download/dev/docs/PIXI.AnimatedSprite.html#toGlobal}
  */
-// PIXI.DisplayObject.prototype.translateToCoordSpace = function(oldParent, newParent){
+// DisplayObject.prototype.translateToCoordSpace = function(oldParent, newParent){
 
 //   return newParent.toLocal(this.position, oldParent, this.position);
 
@@ -489,7 +487,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
  * <br>- The cache will be applied at the next render after cacheAsBitmap is enabled.
  * @returns {boolean} isCached
  */
-// PIXI.DisplayObject.prototype.isCached = function(){
+// DisplayObject.prototype.isCached = function(){
 //   return this._cacheData && this._cacheData.sprite;
 // }
 
@@ -498,7 +496,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
  * <br>- Called by scene on exit.
  * @param {boolean} recursive - Whether to call on children and their children.
  */
-// PIXI.DisplayObject.prototype.destroyFiltersAndMasks = function(recursive = true){
+// DisplayObject.prototype.destroyFiltersAndMasks = function(recursive = true){
 
 //   if (this.mask){
 //     this.mask = null;
@@ -556,7 +554,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
  * @param {boolean} [options.rotateOnly=false] - If true then position will not be animated.
  * @param {Array|DisplayObject} [extraTargets=false] - Any additional display objects that will be affected by the animation.
  */
-// PIXI.DisplayObject.prototype.applyShake = function(traumaPerc, maxFactor = 1.0, options = null, extraTargets = null){
+// DisplayObject.prototype.applyShake = function(traumaPerc, maxFactor = 1.0, options = null, extraTargets = null){
 
 //   let defaults = {
 //       rotateOnly: false,
@@ -616,7 +614,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
 /**
  * Stops and disposes of any screenshake in progress.
  */
-// PIXI.DisplayObject.prototype.killShake = function(){
+// DisplayObject.prototype.killShake = function(){
 
 //   if (typeof this._shake !== 'undefined'){
 //     this._shake.kill();
@@ -632,7 +630,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
  * @param {number} [stateChangeCallback=null] - Will trigger callback on state change.
  */
 
-// PIXI.DisplayObject.prototype.makeBtn = function(clickCallback = null, stateChangeCallback = null){
+// DisplayObject.prototype.makeBtn = function(clickCallback = null, stateChangeCallback = null){
 
 //   const tintOn = 0x000000;;
 //   this.interactive = true;
@@ -643,7 +641,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
 //     if (isContainer){
 //       const debugHitBtn = false;
 //       // Add a layer to collect hit events for the button, as containers have no bounds.
-//       const hit = new Sprite(debugHitBtn ? PIXI.Texture.WHITE : PIXI.Texture.EMPTY);
+//       const hit = new Sprite(debugHitBtn ? Texture.WHITE : Texture.EMPTY);
 //       hit.name = '__btnhit';
 //       hit.width = this.txInfo._proj.width;
 //       hit.height = this.txInfo._proj.height;
@@ -717,7 +715,7 @@ export function translatePointToCoordSpace(pt, oldParent, newParent) {
 /**
  * Resets and cleans up display object that was converted to button with `makeBtn()`.
  */
-// PIXI.DisplayObject.prototype.killBtn = function(){
+// DisplayObject.prototype.killBtn = function(){
 //   this.off('pointerdown');
 //   this.off('pointerupoutside');
 //   this.off('pointerup');
